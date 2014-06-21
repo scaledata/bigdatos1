@@ -1,0 +1,7 @@
+1. Install ZMQ stable release 4.0.4
+#./configure.sh
+#make 
+#sudo make install
+
+2. Install python binding for ZMQ
+#sudo pip install pyzmq

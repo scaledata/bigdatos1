@@ -1,0 +1,5 @@
+1. Install SQLite
+#sudo apt-get install sqlite3 libsqlite3-dev
+
+2. Install Python binding
+#sudo pip install pysqlite

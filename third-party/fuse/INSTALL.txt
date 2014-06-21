@@ -1,0 +1,25 @@
+For FUSE, 
+1. Download the latest stable version 2.9.3
+2. Install
+#./configure
+#make
+#make install 
+
+3. Install Python binding
+#sudo apt-get install fusepy
+
+For LoggedFS,
+
+1. Compile the code
+#make
+
+Notes to fix errors in the compilation
+1.1. Missing <pcre.h>
+#sudo apt-get install libpcre3-dev
+
+1.2. Missing <libxml/parser.h>
+#sudo apt-get install libxml2-dev
+
+1.3. Missing <rlog/rlog.h>
+#sudo apt-get install librlog-dev 
+

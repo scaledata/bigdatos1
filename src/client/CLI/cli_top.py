@@ -1,10 +1,20 @@
 #!/usr/bin/python
 
+###########################
 # Imports
+###########################
+
+# Logging/rabbit imports
 import sys
 import pika
-import argparse
 import logging
+
+# Time related imports
+import datetime
+import time
+
+# Other imports
+import argparse
 
 ###################################################
 # BigDatos CLI implementation
@@ -16,7 +26,7 @@ version = 0.2
 # DAtos SHell
 cli_str = "dash>"
 
-# commands = ["datamanage", "dataretrieve", "help"]
+# commands = ["manage", "retrieve", "help"]
 
 ##########################
 # Globals
@@ -31,18 +41,19 @@ int_conv = {"sec":1, \
 # Day - need to define time of day
 # Week - need to define day of week + day meta
 
+###########################################
+# Implementation of the list command
+###########################################
 def list_impl(args):
     print "coming soon"
 
+###########################################
+# Implementation of the manage command
+###########################################
 def manage_impl(args):
     # print "in manage_impl: ", args
 
     words = args.split(' ')
-
-    count = 0
-    for w in words:
-        # print count, ": ", w
-        count += 1
 
     length = len(words)
     # print "len:", length
@@ -64,7 +75,6 @@ def manage_impl(args):
 
     # Check the int
     act_int = int(int1)
-    # print "Actual int is:", act_int
 
     # So far so good
     # Convert the units to secs
@@ -87,21 +97,76 @@ def manage_impl(args):
 
     send_manage_msg(filename, act_int)
 
+################################################
+# Show the help message for the manage command
+################################################
 def manage_show_help():
-    print "datamanage <filename> <interval time> <units (sec|min|hour|day|week)>"
+    print "manage <filename> <interval time> <units (sec|min|hour|day|week)>"
     print "eg: datamanage test.out 30 min"
 
-    # <filename><name></filename><interval><secs></interval>
-    # <filename>
-    # name
-    # </filename>
-    #
     # operation:type,filename:name,interval:secs
 
+###########################################
+# Implementation of the retrieve command
+###########################################
 def retrieve_impl(args):
     # Remove this..
     args = args
     # print "in retrieve_impl: ", args
+
+    words = args.split(' ')
+
+    length = len(words)
+    # print "len:", length
+
+    if (length != 3):
+        print "retrieve - incorrect no: of arguments"
+        retrieve_show_help()
+        return
+
+    filename = words[1]
+    req_time = words[2]
+
+    print "filename=", filename, "req_time=", req_time
+
+    time_comp = req_time.split(':')
+    print "time comp has: ", len(time_comp), " parts"
+
+    for t in time_comp:
+        print "t=", t
+
+    if (len(time_comp) != 6):
+        print "retrieve - Incorrect time specification: ", time
+        retrieve_show_help()
+        return
+
+    # TO DO: Handle variable time spec
+    # Eg: 06:30 - means 6mins sec today?
+
+    # TO DO: Figure out how to handle timezones.
+    req_time_obj = datetime.datetime(int(time_comp[0]), int(time_comp[1]), int(time_comp[2]),
+                                     int(time_comp[3]), int(time_comp[4]), int(time_comp[5])) 
+
+    epoch_obj = datetime.datetime.utcfromtimestamp(0)
+    delta = req_time_obj - epoch_obj
+    
+    print "req_time is: ", req_time_obj
+    print "epoch start time is: ", epoch_obj
+    print "delta = ", delta
+
+    delta_secs = delta.total_seconds()
+    print "delta_secs = ", delta_secs
+
+    send_retrieve_msg(filename, delta_secs)
+
+################################################
+# Show the help message for the retrieve command
+################################################
+def retrieve_show_help():
+    print "retrieve <filename> <UTC timespec>"
+    print "eg: retrieve test.out 2014:06:24:5:30:00"
+
+    # operation:type,filename:name,req_time
 
 def help_impl(args):
     print "Valid commands are:"
@@ -177,21 +242,53 @@ def process_input(userline):
         print "Invalid command.."
         help_impl(userline)
 
+def run_interactive():
+    buffer = []
+    while True:
+        sys.stdout.write(cli_str)
+        userline = sys.stdin.readline().rstrip('\n')
+        if (userline == 'quit'):
+            break
+        else:
+            # print "Line was:",userline, "\n"
+            process_input(userline)
+
+def parse_input():
+    #parser = argparse.ArgumentParser(description='Datos shell')
+    #parser.add_argument('command', metavar='command', type=str, 
+    #                   help='Optional arg to run a single command')
+
+    #args = parser.parse_args()
+
+    args = sys.argv
+    # for arg in args:
+    #    print "arg=", arg
+    
+    # Temp list where the first element is removed
+    # Better way of doing this?
+    temp_args = args[1:]
+    
+    userline = ' '.join(temp_args)
+    print "userline=", userline
+    
+    return userline
+
+def run_single():
+    print " in run_single"
+    userline = parse_input()
+
+    process_input(userline)
+    
 ########################
 # Main
 ########################
 print "Welcome to BigDatos CLI(", version,")"
 
-buffer = []
-while True:
-    sys.stdout.write(cli_str)
-    userline = sys.stdin.readline().rstrip('\n')
-    if (userline == 'quit'):
-        break
-    else:
-        # print "Line was:",userline, "\n"
-        process_input(userline)
-        
+if (len(sys.argv) > 1):
+    run_single()
+else:
+    run_interactive()
+
 print "Goodbye.."
 
 

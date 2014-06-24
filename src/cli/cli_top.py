@@ -122,7 +122,7 @@ def send_rabbit_msg(str):
     # ip address hardcoded to VM2
     dest_ip = "10.0.0.11"
 
-    queue_name = "nc_queue"
+    queue_name = "main_queue"
 
     logging.getLogger('pika').setLevel(logging.CRITICAL)
     credentials = pika.PlainCredentials('guest', 'guest')

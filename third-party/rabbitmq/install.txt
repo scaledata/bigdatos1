@@ -1,0 +1,25 @@
+1. Install RabbitMQ Server on Ubuntu
+echo "deb http://www.rabbitmq.com/debian/ testing main"  | sudo tee  /etc/apt/sources.list.d/rabbitmq.list > /dev/null
+sudo wget http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
+sudo apt-key add rabbitmq-signing-key-public.asc
+sudo apt-get update
+sudo apt-get install rabbitmq-server -y
+sudo service rabbitmq-server start
+sudo rabbitmq-plugins enable rabbitmq_management
+sudo service rabbitmq-server restart
+
+2. Install Python binding for RabbitMQ
+#sudo apt-get install python-pip git-core
+#sudo pip install pika==0.9.13
+
+3. Add user and allow the user to connect remotely
+3.1 Change the password for guest
+#sudo rabbitmqctl change_password guest guest
+
+3.2 Allow guest to connect remotely
+A complete rabbitmq.config (/etc/rabbitmq/rabbitmq.config) which does this would look like:
+
+[{rabbit, [{loopback_users, []}]}].
+
+#sudo service rabbitmq-server restart
+

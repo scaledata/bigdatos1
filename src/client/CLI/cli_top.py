@@ -2,6 +2,9 @@
 
 # Imports
 import sys
+import pika
+import argparse
+import logging
 
 ###################################################
 # BigDatos CLI implementation
@@ -29,17 +32,17 @@ def list_impl(args):
     print "coming soon"
 
 def dmanage_impl(args):
-    print "in dmanage_impl: ", args
+    # print "in dmanage_impl: ", args
 
     words = args.split(' ')
 
     count = 0
     for w in words:
-        print count, ": ", w
+        # print count, ": ", w
         count += 1
 
     length = len(words)
-    print "len:", length
+    # print "len:", length
 
     if (length != 3 and length != 4):
         dmanage_show_help()
@@ -54,30 +57,30 @@ def dmanage_impl(args):
     else:
         int2 = words[3]
 
-    print "filename=", filename, "int1=", int1, "int2=", int2
+    # print "filename=", filename, "int1=", int1, "int2=", int2
 
     # Check the int
     act_int = int(int1)
-    print "Actual int is:", act_int
+    # print "Actual int is:", act_int
 
     # So far so good
     # Convert the units to secs
     valid_unit = False
     for key in int_conv:
-        print "checking:", key
+        # print "checking:", key
         if (key == int2):
             valid_unit = True
-            print "Found valid unit:", int2
+            # print "Found valid unit:", int2
             break
 
     if (not valid_unit):
-        print "Invalid unit:", int2
+        # print "Invalid unit:", int2
         dmanage_show_help()
         return
 
     # Convert units
     act_int = act_int * int_conv[int2]
-    print "Converted actual int to: ", act_int
+    # print "Converted actual int to: ", act_int
 
     send_dmanage_msg(filename, act_int)
 
@@ -93,25 +96,52 @@ def dmanage_show_help():
     # operation:type,filename:name,interval:secs
 
 def dretrieve_impl(args):
-    print "in dretrieve_impl: ", args
+    # Remove this..
+    args = args
+    # print "in dretrieve_impl: ", args
 
 def help_impl(args):
     print "Valid commands are:"
     for key in command_fns:
         print key
+    print " "
 
 def send_dmanage_msg(filename, act_int):
     str = "operation:datamanage,filename:%s,interval:%d" % (filename, act_int)
-    print "Going to send rabbitmq:", str
+    # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
 
 def send_dretrieve_msg(filename, time):
     str = "operation:dataretrieve,filename:%s,req_time:%d" % (filename, time)
-    print "Going to send rabbitmq:", str
+    # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
 
 def send_rabbit_msg(str):
-    print "in send_rabbit_msg"
+    print "in send_rabbit_ms - going to send rabbitmq:", str
+    
+    # ip address hardcoded to VM2
+    dest_ip = "10.0.0.11"
+
+    queue_name = "nc_queue"
+
+    logging.getLogger('pika').setLevel(logging.CRITICAL)
+    credentials = pika.PlainCredentials('guest', 'guest')
+    
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+               dest_ip,
+               5672, 
+               '/',
+               credentials))
+    channel = connection.channel()
+    
+    channel.queue_declare(queue=queue_name)
+    
+    channel.basic_publish(exchange='',
+                          routing_key=queue_name,
+                          body=str)
+    
+    print "Finished sending (to vm2) rabbitmq message: ", str      
+    connection.close()
 
 # Define a dict
 command_fns = {"datamanage":dmanage_impl, \
@@ -123,13 +153,17 @@ def process_input(userline):
     valid_command = False
 
     userline.lstrip()
-    print "after strip:",userline
+    # print "after strip:",userline
+
+    if (userline == ""):
+        # print "Empty str"
+        return
 
     for key in command_fns:
         # Check if the line start 
-        print "checking:", key
+        # print "checking:", key
         if (userline.startswith(key)):
-            print "found match"
+            # print "found match"
             valid_command = True
 
             # Invoke the fn ptr
@@ -152,10 +186,9 @@ while True:
     if (userline == 'quit'):
         break
     else:
-        print "Line was:",userline, "\n"
+        # print "Line was:",userline, "\n"
         process_input(userline)
         
 print "Goodbye.."
-
 
 

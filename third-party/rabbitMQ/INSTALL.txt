@@ -14,12 +14,12 @@ sudo service rabbitmq-server restart
 
 3. Add user and allow the user to connect remotely
 3.1 Change the password for guest
-#rabbitmqctl change_password guest guest
+#sudo rabbitmqctl change_password guest guest
 
 3.2 Allow guest to connect remotely
-A complete rabbitmq.config () which does this would look like:
+A complete rabbitmq.config (/etc/rabbitmq/rabbitmq.config) which does this would look like:
 
 [{rabbit, [{loopback_users, []}]}].
 
-#sudo service rabbitmq_server restart
+#sudo service rabbitmq-server restart
 

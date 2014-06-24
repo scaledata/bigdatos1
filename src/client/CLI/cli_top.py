@@ -12,7 +12,9 @@ import logging
 ###################################################
 
 version = 0.2
-cli_str = "bigdatos>"
+
+# DAtos SHell
+cli_str = "dash>"
 
 # commands = ["datamanage", "dataretrieve", "help"]
 
@@ -25,14 +27,15 @@ int_conv = {"sec":1, \
             "day":3600*24, \
             "week":3600*24*7}
 
+# TO DO:
 # Day - need to define time of day
 # Week - need to define day of week + day meta
 
 def list_impl(args):
     print "coming soon"
 
-def dmanage_impl(args):
-    # print "in dmanage_impl: ", args
+def manage_impl(args):
+    # print "in manage_impl: ", args
 
     words = args.split(' ')
 
@@ -45,7 +48,7 @@ def dmanage_impl(args):
     # print "len:", length
 
     if (length != 3 and length != 4):
-        dmanage_show_help()
+        manage_show_help()
         return
 
     filename = words[1]
@@ -75,16 +78,16 @@ def dmanage_impl(args):
 
     if (not valid_unit):
         # print "Invalid unit:", int2
-        dmanage_show_help()
+        manage_show_help()
         return
 
     # Convert units
     act_int = act_int * int_conv[int2]
     # print "Converted actual int to: ", act_int
 
-    send_dmanage_msg(filename, act_int)
+    send_manage_msg(filename, act_int)
 
-def dmanage_show_help():
+def manage_show_help():
     print "datamanage <filename> <interval time> <units (sec|min|hour|day|week)>"
     print "eg: datamanage test.out 30 min"
 
@@ -95,10 +98,10 @@ def dmanage_show_help():
     #
     # operation:type,filename:name,interval:secs
 
-def dretrieve_impl(args):
+def retrieve_impl(args):
     # Remove this..
     args = args
-    # print "in dretrieve_impl: ", args
+    # print "in retrieve_impl: ", args
 
 def help_impl(args):
     print "Valid commands are:"
@@ -106,12 +109,12 @@ def help_impl(args):
         print key
     print " "
 
-def send_dmanage_msg(filename, act_int):
+def send_manage_msg(filename, act_int):
     str = "operation:datamanage,filename:%s,interval:%d" % (filename, act_int)
     # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
 
-def send_dretrieve_msg(filename, time):
+def send_retrieve_msg(filename, time):
     str = "operation:dataretrieve,filename:%s,req_time:%d" % (filename, time)
     # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
@@ -144,8 +147,8 @@ def send_rabbit_msg(str):
     connection.close()
 
 # Define a dict
-command_fns = {"datamanage":dmanage_impl, \
-               "dataretrieve":dretrieve_impl, \
+command_fns = {"manage":manage_impl, \
+               "retrieve":retrieve_impl, \
                "list":list_impl, \
                "help":help_impl}
 
@@ -177,7 +180,7 @@ def process_input(userline):
 ########################
 # Main
 ########################
-print "Welcome to BigDatos CLI (", version, ")"
+print "Welcome to BigDatos CLI(", version,")"
 
 buffer = []
 while True:

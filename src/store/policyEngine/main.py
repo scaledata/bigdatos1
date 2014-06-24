@@ -43,13 +43,13 @@ def callback(ch, method, properties, body):
 		filename = namePair[1].strip()
 		interval = intervalPair[1].strip()
 
-		if operation == 'datamanage':
+		if operation == 'manage':
 			#TODO: Store the policy in Swift
 			print "manage function" 
-		elif operation == 'datastore':
+		elif operation == 'store':
 			# TODO: Store the data, implement it later
 			print "Start to store data at interval " + interval
-		elif operation == 'dataretrieve':
+		elif operation == 'retrieve':
 			# TODO: retrieve the data
 			print "retrieve function"       
 

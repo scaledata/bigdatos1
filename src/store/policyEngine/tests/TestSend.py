@@ -8,6 +8,8 @@ def parseInput():
                        help='an IP address of the RabbitMQ Broker')
     parser.add_argument('queueName', metavar='QueueName', type=str, 
                        help='an queue name to subscribe to')
+    parser.add_argument('command', metavar='Command', type=str, 
+                       help='operation: type, filename: name, interval: seconds')
     
     args = parser.parse_args()
     
@@ -34,9 +36,9 @@ def main():
     
     channel.basic_publish(exchange='',
                           routing_key=args.queueName,
-                          body='Hello World!')
+                          body=args.command)
     
-    print " [x] Sent 'Hello World!'"
+    print " [x] Sent " + args.command
     
     
     connection.close()

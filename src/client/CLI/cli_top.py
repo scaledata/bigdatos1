@@ -187,6 +187,9 @@ def send_retrieve_msg(filename, time):
 def send_rabbit_msg(str):
     print "in send_rabbit_ms - going to send rabbitmq:", str
     
+    # ip address hardcoded to VM1
+    # dest_ip = "10.0.0.3"
+
     # ip address hardcoded to VM2
     dest_ip = "10.0.0.11"
 

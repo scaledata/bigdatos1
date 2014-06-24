@@ -45,18 +45,22 @@ def callback(ch, method, properties, body):
 
 		if operation == 'manage':
 			#TODO: Store the policy in Swift
-			print "manage function" 
+			print "Asked to manage file:", filename, "at interval: ", interval, "secs" 
 		elif operation == 'store':
 			# TODO: Store the data, implement it later
 			print "Start to store data at interval " + interval
 		elif operation == 'retrieve':
 			# TODO: retrieve the data
-			print "retrieve function"       
+			print "retrieve function )"       
 
-			if interval % storeInterval != 0:
+                        # 
+			# if interval % storeInterval != 0:
 			# TODO: Raise error
-				print "We do not support retrieval from Point-in-Time other than the scheduled backup time"
-				return
+			#	print "We do not support retrieval from Point-in-Time other than the scheduled backup time"
+                        # return
+                        
+                        req_time = interval # just being pedantic
+                        print "Asked to retrieve file:", filename, "from time: ", req_time, "secs"
 
 		else: 
 			# TODO: Raise error in error logging

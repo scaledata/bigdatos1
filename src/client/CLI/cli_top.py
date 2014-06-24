@@ -110,12 +110,12 @@ def help_impl(args):
     print " "
 
 def send_manage_msg(filename, act_int):
-    str = "operation:datamanage,filename:%s,interval:%d" % (filename, act_int)
+    str = "operation:manage,filename:%s,interval:%d" % (filename, act_int)
     # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
 
 def send_retrieve_msg(filename, time):
-    str = "operation:dataretrieve,filename:%s,req_time:%d" % (filename, time)
+    str = "operation:retrieve,filename:%s,req_time:%d" % (filename, time)
     # print "Going to send rabbitmq:", str
     send_rabbit_msg(str)
 

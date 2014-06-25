@@ -32,8 +32,6 @@ def main():
                credentials))
     channel = connection.channel()
     
-    channel.queue_declare(queue=args.queueName)
-    
     channel.basic_publish(exchange='',
                           routing_key=args.queueName,
                           body=args.command)

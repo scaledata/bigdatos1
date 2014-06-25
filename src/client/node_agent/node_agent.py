@@ -48,7 +48,7 @@ def on_channel_open(new_channel):
     global channel
     print "channel open"
     channel = new_channel
-    channel.queue_declare(queue=policy_eng_queue_name,
+    channel.queue_declare(queue=datos_constants.NODE_AGENT_QUEUE_NAME,
                           passive=True, 
                           durable=True, 
                           exclusive=False, 
@@ -59,7 +59,7 @@ def on_channel_open(new_channel):
 def on_queue_declared(frame):
     # Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ
     print "queue declared"
-    channel.basic_consume(handle_delivery, queue=policy_eng_queue_name)
+    channel.basic_consume(handle_delivery, queue=datos_constants.NODE_AGENT_QUEUE_NAME)
 
 def handle_delivery(ch, method, header, body):
     print "handle_delivery received: ", body

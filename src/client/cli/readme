@@ -1,0 +1,11 @@
+Readme for BigDatos CLI
+------------------------------
+
+1. Setup instructions:
+   Set environment var PYTHONPATH to your bigdatos/src/include folder
+   
+   [Eg:
+        ~/data/dev3/bigdatos/src/include$ export PYTHONPATH=`pwd`
+   ]
+
+2. From this directory, run with >python cli_top.py

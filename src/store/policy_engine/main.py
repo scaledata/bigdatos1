@@ -5,23 +5,28 @@
 import pika
 import argparse
 import logging
+from local_pe_backend import local_pe_backend
 
+my_local_store = local_pe_backend()
+channel = None
+global_queue_name = None
 
-def parseInput():
+def parse_input():
     parser = argparse.ArgumentParser(description='Start Policy Engine with an IP address')
     parser.add_argument('IPAddr', metavar='IPAddr', type=str, 
                        help='an IP address to listen to for the communication')
-    parser.add_argument('queueName', metavar='QueueName', type=str, 
+    parser.add_argument('queue_name', metavar='QueueName', type=str, 
                        help='an queue name to listen to for the communication')
     
     args = parser.parse_args()
     
-    print "IPAddr: " + args.IPAddr + ", queue name: " + args.queueName
+    print "IPAddr: " + args.IPAddr + ", queue name: " + args.queue_name
     
     return args
 
 
-def callback(ch, method, properties, body):
+
+def handle_delivery(ch, method, header, body):
     print " [x] Received %r" % (body,)
     cmdComps = body.split(',')
     
@@ -34,71 +39,111 @@ def callback(ch, method, properties, body):
         namePair = cmdComps[1].split(':')
         intervalPair = cmdComps[2].split(':')
 
-	if len(intervalPair) != 2 or len(operationPair) != 2 or len(namePair) != 2:
-		print "[ERROR] Failed to get the full command. \n The full command should be operation: type, filename: name, interval: seconds"
-		return
-	else:       
- 
-		operation = operationPair[1].strip()
-		filename = namePair[1].strip()
-		interval = intervalPair[1].strip()
+    	if len(intervalPair) != 2 or len(operationPair) != 2 or len(namePair) != 2:
+            #TODO: Ack the failure
+            print "[ERROR] Failed to get the full command. \n The full command should be operation: type, filename: name, interval: seconds"
+            ch.basic_ack(delivery_tag = method.delivery_tag)
+            
+            return
+  
+    	else:
+            operation = operationPair[1].strip()
+            filename = namePair[1].strip()
+            interval = intervalPair[1].strip()
+            
+            if operation == 'manage':
+    			#TODO: Store the policy in Swift
+                print "manage function"
+                
+                my_local_store.storePolicy(filename, interval)
+                
+            elif operation == 'store':
+    			# TODO: Store the data, implement it later
+                print "Start to store data at interval " + interval
+                storeInterval, storeStatus = my_local_store.readPolicy(filename)
+                
+                if not storeStatus: 
+                    # TODO: Raise error
+                    print "Cannot find the policy for " + str(filename)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+            
+                    return
+                
+                # TODO: Ack to Node Agent
+                
+            elif operation == 'retrieve':
+    			# TODO: retrieve the data
+                print "retrieve function"       
+                
+                storeInterval, storeStatus = my_local_store.readPolicy(filename)
+                
+                if not storeStatus: 
+                    # TODO: Raise error
+                    print "Cannot find the policy for " + str(filename)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+            
+                    return
+                
+                print "Stored interval is " + str(storeInterval)
+                
+            else: 
+    			# TODO: Raise error in error logging
+    			print "Non-supported command: " + operation
 
-		if operation == 'manage':
-			#TODO: Store the policy in Swift
-			print "Asked to manage file:", filename, "at interval: ", interval, "secs" 
-		elif operation == 'store':
-			# TODO: Store the data, implement it later
-			print "Start to store data at interval " + interval
-		elif operation == 'retrieve':
-			# TODO: retrieve the data
-			print "retrieve function )"       
+    ch.basic_ack(delivery_tag = method.delivery_tag)
+            
+    return
 
-                        # 
-			# if interval % storeInterval != 0:
-			# TODO: Raise error
-			#	print "We do not support retrieval from Point-in-Time other than the scheduled backup time"
-                        # return
-                        
-                        req_time = interval # just being pedantic
-                        print "Asked to retrieve file:", filename, "from time: ", req_time, "secs"
 
-		else: 
-			# TODO: Raise error in error logging
-			print "Non-supported command: " + operation
+def on_connected(connection):
+    """Called when we are fully connected to RabbitMQ"""
+    print "RabbitMQ connected"
+    connection.channel(on_channel_open)
 
-		return
+def on_channel_open(new_channel):
+    """Called when our channel has opened"""
+    global channel
+    print "channel open"
+    channel = new_channel
+    channel.queue_declare(queue=global_queue_name,
+                          passive=True, 
+                          durable=True, 
+                          exclusive=False, 
+                          auto_delete=False, 
+                          callback=on_queue_declared)
 
+# Step #4
+def on_queue_declared(frame):
+    """Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ"""
+    print "queue declared"
+    channel.basic_consume(handle_delivery, queue=global_queue_name)
 
 def main():
     
-    args = parseInput()
+    args = parse_input()
 
     logging.getLogger('pika').setLevel(logging.CRITICAL)
     
     credentials = pika.PlainCredentials('guest', 'guest')
     
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
+    global global_queue_name
+    global_queue_name = args.queue_name
+    
+    parameters = pika.ConnectionParameters(
                args.IPAddr,
                5672, 
                '/',
-               credentials))
-    channel = connection.channel()
-
-    channel.queue_declare(queue=args.queueName)
+               credentials)
+    connection = pika.SelectConnection(parameters, on_connected)
     
-    channel.basic_consume(callback,
-                      queue=args.queueName,
-                      no_ack=False)
-
-    print ' [*] Waiting for messages. To exit press CTRL+C'
-
     try:
-        channel.start_consuming()
+        # Loop so we can communicate with RabbitMQ
+        connection.ioloop.start()
     except KeyboardInterrupt:
-        channel.stop_consuming()
-
-    connection.close()
-    
+        # Gracefully close the connection
+        connection.close()
+        # Loop until we're fully closed, will stop on its own
+        connection.ioloop.start()
     
     
 if __name__ == "__main__":

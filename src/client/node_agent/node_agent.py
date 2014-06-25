@@ -29,7 +29,9 @@ import argparse
 # Global section 
 version = 0.2
 policy_eng_queue_name = "policy_eng_queue"
- # ip address hardcoded to VM1
+node_agent_str = "node agent>"
+
+# ip address hardcoded to VM1
 node_agent_ip = "10.0.0.3"
 
 # Globals shared between threads
@@ -59,7 +61,7 @@ def on_channel_open(new_channel):
 def on_queue_declared(frame):
     # Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ
     print "queue declared"
-    channel.basic_consume(handle_delivery, queue=datos_constants.NODE_AGENT_QUEUE_NAME)
+    channel.basic_consume(handle_delivery, queue=datos_constants.NODE_AGENT_QUEUE_NAME)    
 
 def handle_delivery(ch, method, header, body):
     print "handle_delivery received: ", body
@@ -69,8 +71,6 @@ def handle_delivery(ch, method, header, body):
 
     # Put the msg body in a queue and signal the pe_listener to process it
     
-    
-
 def print_thread_stats(name):
     
     # TO DO: Change to log
@@ -85,6 +85,8 @@ class policy_listener(threading.Thread):
         self.threadID = threadid
         self.name = name
         self.counter = counter
+        self.connection = 0
+
     def run(self):
         print "In run() method of policy_listener thread:", self.name
 
@@ -96,7 +98,7 @@ class policy_listener(threading.Thread):
                5672, 
                '/',
                credentials)
-        connection = pika.SelectConnection(parameters, on_connected)
+        self.connection = pika.SelectConnection(parameters, on_connected)
 
         while (not should_shutdown):
 
@@ -105,13 +107,16 @@ class policy_listener(threading.Thread):
                
             try:
                 # Loop so we can communicate with RabbitMQ
-                connection.ioloop.start()
-            except KeyboardInterrupt:
-                # Gracefully close the connection
-                connection.close()
-                # Loop until we're fully closed, will stop on its own
-                connection.ioloop.start()
+                self.connection.ioloop.start()
+            except:
+                pass
+                
+        # Gracefully close the connection
+        # self.connection.close()
+        # Loop until we're fully closed, will stop on its own
+        # self.connection.ioloop.start()
 
+        print "policy_listener thread:", self.name, " is going to shutdown.. - bye"
 
 ########################
 # Node agent startup
@@ -135,7 +140,33 @@ def startup():
 def main_work():
     print "Node Agent main_work()"
     
+    # state = started
+    state = 1 # started
 
+    while True:
+        sys.stdout.write(node_agent_str)
+        userline = sys.stdin.readline().rstrip('\n')
+        if (userline == 'quit'):
+            break
+
+        # Every 20 sec, send a heartbeat (with state, message order) to the Policy engine
+        # type=node_agent_heartbeat, seq_id=<num>
+        
+def shutdown():
+    global should_shutdown
+
+    print "Node Agent shutting down.."
+    
+    # Let all threads know they should finish
+    should_shutdown = True
+   
+    # Need to stop the rabittmq ioloop
+    print "Stopping the IOloop in startup()"
+    plist_thread.connection.ioloop.stop()
+ 
+    # Wait for all threads to finish
+    plist_thread.join()
+    
 ########################
 # Main
 ########################
@@ -143,6 +174,7 @@ print "Welcome to BigDatos NodeAgent version (", version, ")"
 
 startup()
 main_work()
+shutdown()
 
 print "Goodbye.."
 

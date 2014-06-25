@@ -1,8 +1,12 @@
 #!/usr/bin/python
 
-###########################
+###################################################
+# CLI implementation
+# Copyright (c) DatosCloud, Inc 2014.
+###################################################
+
 # Imports
-###########################
+#########
 
 # Logging/rabbit imports
 import sys
@@ -13,13 +17,11 @@ import logging
 import datetime
 import time
 
+# BigDatos Constants
+import datos_constants
+
 # Other imports
 import argparse
-
-###################################################
-# BigDatos CLI implementation
-# Copyright (c) DatosCloud, Inc 2014.
-###################################################
 
 version = 0.2
 
@@ -193,7 +195,7 @@ def send_rabbit_msg(str):
     # ip address hardcoded to VM2
     dest_ip = "10.0.0.11"
 
-    queue_name = "main_queue"
+    queue_name = datos_constants.POLICY_ENGINE_QUEUE_NAME;
 
     logging.getLogger('pika').setLevel(logging.CRITICAL)
     credentials = pika.PlainCredentials('guest', 'guest')

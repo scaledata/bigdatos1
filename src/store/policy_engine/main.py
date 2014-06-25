@@ -6,21 +6,26 @@ import pika
 import argparse
 import logging
 from local_pe_backend import local_pe_backend
+import datos_constants as DC
 
-my_local_store = local_pe_backend()
+my_local_policy_store = local_pe_backend()
+my_local_mapping_store = local_pe_backend('FileRelations.txt')
+
 channel = None
-global_queue_name = None
+global_policy_engine_queue = DC.POLICY_ENGINE_QUEUE_NAME
+global_node_agent_queue = DC.NODE_AGENT_QUEUE_NAME
+node_agent_channel = None
 
 def parse_input():
     parser = argparse.ArgumentParser(description='Start Policy Engine with an IP address')
     parser.add_argument('IPAddr', metavar='IPAddr', type=str, 
-                       help='an IP address to listen to for the communication')
-    parser.add_argument('queue_name', metavar='QueueName', type=str, 
-                       help='an queue name to listen to for the communication')
+                       help='an IP address Policy Engine binds to accept messages')
+    parser.add_argument('node_agent_ip', metavar='NodeAgentIPAddr', type=str, 
+                       help='an IP address Node Agent binds to accept messages')
     
     args = parser.parse_args()
     
-    print "IPAddr: " + args.IPAddr + ", queue name: " + args.queue_name
+    print "Policy Engine IPAddr: " + args.IPAddr + ", node agent: " + args.node_agent_ip
     
     return args
 
@@ -55,12 +60,19 @@ def handle_delivery(ch, method, header, body):
     			#TODO: Store the policy in Swift
                 print "manage function"
                 
-                my_local_store.storePolicy(filename, interval)
+                my_local_policy_store.put(filename, interval)
+                
+                #TODO: for Hive, need to query the Hive metastore
+                my_local_mapping_store.put(filename, filename)
+                
+                node_agent_channel.basic_publish(exchange='',
+                          routing_key=global_node_agent_queue,
+                          body=body)
                 
             elif operation == 'store':
     			# TODO: Store the data, implement it later
                 print "Start to store data at interval " + interval
-                storeInterval, storeStatus = my_local_store.readPolicy(filename)
+                storeInterval, storeStatus = my_local_policy_store.get(filename)
                 
                 if not storeStatus: 
                     # TODO: Raise error
@@ -69,13 +81,14 @@ def handle_delivery(ch, method, header, body):
             
                     return
                 
-                # TODO: Ack to Node Agent
+                
+                
                 
             elif operation == 'retrieve':
     			# TODO: retrieve the data
                 print "retrieve function"       
                 
-                storeInterval, storeStatus = my_local_store.readPolicy(filename)
+                storeInterval, storeStatus = my_local_policy_store.get(filename)
                 
                 if not storeStatus: 
                     # TODO: Raise error
@@ -105,7 +118,7 @@ def on_channel_open(new_channel):
     global channel
     print "channel open"
     channel = new_channel
-    channel.queue_declare(queue=global_queue_name,
+    channel.queue_declare(queue=global_policy_engine_queue,
                           passive=True, 
                           durable=True, 
                           exclusive=False, 
@@ -116,7 +129,7 @@ def on_channel_open(new_channel):
 def on_queue_declared(frame):
     """Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ"""
     print "queue declared"
-    channel.basic_consume(handle_delivery, queue=global_queue_name)
+    channel.basic_consume(handle_delivery, queue=global_policy_engine_queue)
 
 def main():
     
@@ -126,8 +139,16 @@ def main():
     
     credentials = pika.PlainCredentials('guest', 'guest')
     
-    global global_queue_name
-    global_queue_name = args.queue_name
+    #Initialize the channel to node agent
+    node_agent_connection = pika.BlockingConnection(pika.ConnectionParameters(
+               args.node_agent_ip,
+               5672, 
+               '/',
+               credentials))
+    global node_agent_channel
+    node_agent_channel = node_agent_connection.channel()
+    
+    node_agent_channel.queue_declare(queue=global_node_agent_queue)
     
     parameters = pika.ConnectionParameters(
                args.IPAddr,
@@ -142,6 +163,9 @@ def main():
     except KeyboardInterrupt:
         # Gracefully close the connection
         connection.close()
+        
+        node_agent_connection.close()
+        
         # Loop until we're fully closed, will stop on its own
         connection.ioloop.start()
     

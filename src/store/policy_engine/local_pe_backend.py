@@ -13,7 +13,7 @@ class local_pe_backend(object):
         
         self.filelock = threading.Lock()
         
-    def storePolicy(self, filename, interval):
+    def put(self, filename, interval):
         
         self.filelock.acquire()
         try: 
@@ -29,7 +29,7 @@ class local_pe_backend(object):
             
         return
     
-    def readPolicy(self, filename):
+    def get(self, filename):
         
         storeInterval = str(s.INVALID_INTERVAL)
         

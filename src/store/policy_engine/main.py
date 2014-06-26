@@ -14,6 +14,7 @@ my_local_l2p_store = local_pe_backend('FileToObjects.txt')
 
 
 channel = None
+heartbeat_channel = None
 global_policy_engine_queue = DC.POLICY_ENGINE_QUEUE_NAME
 global_node_agent_queue = DC.NODE_AGENT_QUEUE_NAME
 node_agent_channel = None
@@ -195,24 +196,69 @@ def on_connected(connection):
     """Called when we are fully connected to RabbitMQ"""
     print "RabbitMQ connected"
     connection.channel(on_channel_open)
+    connection.channel(on_heartbeat_channel_open)
 
 def on_channel_open(new_channel):
     """Called when our channel has opened"""
     global channel
     print "channel open"
     channel = new_channel
-    channel.queue_declare(queue=global_policy_engine_queue,
-                          passive=True, 
-                          durable=True, 
-                          exclusive=False, 
-                          auto_delete=False, 
-                          callback=on_queue_declared)
+    
+    try: 
+        channel.queue_declare(queue=global_policy_engine_queue,
+                              passive=False, 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False, 
+                              callback=on_queue_declared)
+        
+    except:
+        channel.queue_declare(queue=global_policy_engine_queue,
+                              passive=True, 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False, 
+                              callback=on_queue_declared)
 
-# Step #4
+def on_heartbeat_channel_open(new_channel):
+    """Called when our channel has opened"""
+    global heartbeat_channel
+    print "heartbeat channel open"
+    heartbeat_channel = new_channel
+   
+    try: 
+        heartbeat_channel.queue_declare(queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME,
+                              passive=False, 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False, 
+                              callback=on_heartbeat_queue_declared)
+    except:
+        heartbeat_channel.queue_declare(queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME,
+                              passive=True, 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False, 
+                              callback=on_heartbeat_queue_declared)
+        
+
+def handle_heartbeat(ch, method, header, body):
+    print " [x] Received %r" % (body,)
+    cmdComps = body.split(',')
+
+    ch.basic_ack(delivery_tag = method.delivery_tag)
+    
+
+
 def on_queue_declared(frame):
     """Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ"""
     print "queue declared"
     channel.basic_consume(handle_delivery, queue=global_policy_engine_queue)
+
+def on_heartbeat_queue_declared(frame):
+    """Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ"""
+    print "heartbeat queue declared"
+    channel.basic_consume(handle_heartbeat, queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME)
 
 def main():
     

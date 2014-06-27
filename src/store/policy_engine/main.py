@@ -277,8 +277,6 @@ def main():
     global node_agent_channel
     node_agent_channel = node_agent_connection.channel()
     
-    node_agent_channel.queue_declare(queue=global_node_agent_queue)
-    
     parameters = pika.ConnectionParameters(
                args.IPAddr,
                5672, 

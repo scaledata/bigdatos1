@@ -128,7 +128,7 @@ def run():
                                       routing_key=datos_constants.NODE_AGENT_QUEUE_NAME,
                                       body=msg_to_send)
                 
-                print " [x] Sent " + msg_to_send
+                g.debug_log.log(" [x] Sent " + msg_to_send)
                 
     
     except KeyboardInterrupt:

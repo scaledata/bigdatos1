@@ -328,14 +328,14 @@ class app_listener_fuse(LoggingMixIn, Operations):
     def write(self, path, data, offset, fh):
         rpath = self.get_relative_path(path)
 
-        print "At write"
+        #print "At write"
 
         with self.rwlock:
             os.lseek(fh, offset, 0)
-            print "write at offset " + str(offset) + " for file " + str(rpath)
+            g.debug_log.log("write at offset " + str(offset) + " for file " + str(rpath))
             
             if not self.msg_queue is None:
-                print "Start sending data to main thread"
+                g.debug_log.log("Start sending data to main thread")
                 self.msg_queue.put(data)
             
             return os.write(fh, data)

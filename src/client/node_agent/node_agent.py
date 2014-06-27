@@ -59,7 +59,7 @@ def on_channel_open(new_channel):
     print "channel open"
     channel = new_channel
     channel.queue_declare(queue=datos_constants.NODE_AGENT_QUEUE_NAME,
-                          passive=True, 
+                          passive=False, 
                           durable=True, 
                           exclusive=False, 
                           auto_delete=False, 
@@ -162,7 +162,7 @@ def handle_manage_policy_msg(words):
         # child = subprocess.Popen(["python", "./test_listener.py"], stdout=subprocess.PIPE)
         # child = subprocess.Popen(["python", "./test_listener.py"])
 
-        child = subprocess.Popen(["python", "../app_listener/thread_main.py", "10.0.0.3", "/tmp"])
+        child = subprocess.Popen(["python", "../app_listener/thread_main.py", "10.0.0.3", "/home/dev1/hadoop_play/hadoop_store/hdfs/namenode/edit2/current"])
         # child = subprocess.call("python ./hacked_listener.py")
 
         print "Return code was " + str(child)
@@ -262,7 +262,7 @@ def handle_change_log_msg(words):
     print "Trying to copy filename from hadoop to local temp.."
 
     # Say Hdfs dir is /data
-    hdfs_path = "/data/" + str(filename)
+    hdfs_path = str(filename)
     print "hdfs_dir = " + hdfs_path
 
     child = subprocess.Popen(["hadoop", "fs", "-copyToLocal", hdfs_path, "/home/dev1/temp"])

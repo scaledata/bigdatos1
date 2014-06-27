@@ -28,3 +28,11 @@ Add the following line:
 
 2. Manually rollover an edit log
 #hdfs dfsadmin -rollEdits
+
+node agent>Traceback (most recent call last):
+  File "node_agent.py", line 419, in <module>
+    main_work()
+  File "node_agent.py", line 360, in main_work
+    userline = sys.stdin.readline().rstrip('\n')
+ValueError: I/O operation on closed file
+

@@ -2,6 +2,7 @@
 import Queue
 import threading
 import time
+from construct import *
 
 from collections import defaultdict
 from errno import ENOENT
@@ -50,8 +51,8 @@ class edit_log_worker(threading.Thread):
         save_fd = os.open(self.edit_log_dir, os.O_RDONLY)
         mount_point = self.edit_log_dir    
     
-        #fuse = FUSE(app_listener_fuse(save_fd, mount_point, self.msg_queue), 
-        #            mount_point, foreground=False, nonempty=True)
+        fuse = FUSE(app_listener_fuse(save_fd, mount_point, self.msg_queue), 
+                    mount_point, foreground=True, nonempty=True)
 
 
         while True:
@@ -106,8 +107,6 @@ class app_listener_fuse(LoggingMixIn, Operations):
            
     def getattr(self, path, fh=None):        
         rpath = self.get_relative_path(path)
-                
-        # print "At getattr for " + rpath
         g.debug_log.log("At getattr for " + rpath)
         
         try: 
@@ -159,7 +158,6 @@ class app_listener_fuse(LoggingMixIn, Operations):
         
         ret = os.access(rpath, mode)
     
-        print "At access " + rpath + ", mode: " + str(mode) + ", ret:" + str(ret)
         g.debug_log.log("At access " + rpath + ", mode: " + str(mode) + ", ret:" + str(ret))
         
         if not ret:
@@ -170,7 +168,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At mkdir"
+        #print "At mkdir"
         
         return os.mkdir(rpath, mode)
         
@@ -178,7 +176,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         
         rpath = self.get_relative_path(path)
 
-        print "At mknod"
+        #print "At mknod"
 
         return os.mknod(rpath, mode, dev)
     
@@ -187,7 +185,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
 
         rpath = self.get_relative_path(path)
 
-        print "At open"
+        #print "At open"
 
         return os.open(rpath, flags)
 
@@ -197,7 +195,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At readlink"
+        #print "At readlink"
         return os.readlink(rpath)
         
     def unlink(self, path):
@@ -205,7 +203,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At unlink"
+        #print "At unlink"
         return os.unlink(rpath)
         
     def utimens(self, path, times=None):
@@ -213,7 +211,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At utimens"
+        #print "At utimens"
         
         return os.utime(rpath, times)
 
@@ -222,7 +220,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At utime"
+        #print "At utime"
         
         return os.utime(rpath, times)
     
@@ -230,14 +228,14 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rpath = self.get_relative_path(path)
         
         
-        print "At rmdir"
+        #print "At rmdir"
         
         return os.rmdir(rpath)
     
     def symlink(self, target, source):
         
         
-        print "At symlink"
+        #print "At symlink"
         
         rtarget = self.get_relative_path(target)
         
@@ -249,10 +247,9 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rnew = self.get_relative_path(new)
         
         
-        print "At rename, rename " + str(rold) + " to " + str(rnew)
+        #print "At rename, rename " + str(rold) + " to " + str(rnew)
         
-        if not self.msg_queue is None:
-            self.msg_queue.put("operation:rename,old:" + old + ",new:" + new)
+        
         
         return os.rename(rold, rnew)
     
@@ -261,21 +258,21 @@ class app_listener_fuse(LoggingMixIn, Operations):
         rsource = self.get_relative_path(source)
         
         
-        print "At link"
+        #print "At link"
         
         return os.link(rsource, rtarget)
     
     def chmod(self, path, mode):
         rpath = self.get_relative_path(path)
 
-        print "At chmod"
+        #print "At chmod"
 
         return os.chmod(rpath, mode)
     
     def chown(self, path, uid, gid):
         rpath = self.get_relative_path(path)
 
-        print "At chown"
+        #print "At chown"
 
         return os.chown(rpath, uid, gid)
             
@@ -286,14 +283,14 @@ class app_listener_fuse(LoggingMixIn, Operations):
     def flush(self, path, fh):
         
         
-        print "At flush"
+        #print "At flush"
         
         return os.fsync(fh)
 
     def fsync(self, path, datasync, fh):
         
         
-        print "At fsync"
+        #print "At fsync"
         
         return os.fsync(fh)
 
@@ -301,14 +298,14 @@ class app_listener_fuse(LoggingMixIn, Operations):
     def truncate(self, path, length, fh=None):
         rpath = self.get_relative_path(path)
 
-        print "At truncate for file " + str(rpath)
+        #print "At truncate for file " + str(rpath)
 
         f = os.open(rpath, os.O_RDWR)
         return os.ftruncate(f, length)
 
     def read(self, path, size, offset, fh):
         
-        print "At read"
+        #print "At read"
         
         with self.rwlock:
             os.lseek(fh, offset, 0)
@@ -316,7 +313,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
 
     def readdir(self, path, fh):
         
-        print "At readdir"
+        #print "At readdir"
         
         rpath = self.get_relative_path(path)
 
@@ -324,7 +321,7 @@ class app_listener_fuse(LoggingMixIn, Operations):
     
     def release(self, path, fh):
         
-        print "At release for path " + str(path)
+        #print "At release for path " + str(path)
         
         return os.close(fh)
     
@@ -336,6 +333,11 @@ class app_listener_fuse(LoggingMixIn, Operations):
         with self.rwlock:
             os.lseek(fh, offset, 0)
             print "write at offset " + str(offset) + " for file " + str(rpath)
+            
+            if not self.msg_queue is None:
+                print "Start sending data to main thread"
+                self.msg_queue.put(data)
+            
             return os.write(fh, data)
 
 if __name__ == "__main__":

@@ -17,6 +17,9 @@ Add the following line:
 
 3. Install Binary data parser
 #sudo pip install construct
+
+4. Run App Listener alone
+#PYTHONPATH=../../include python thread_main.py 10.0.0.3 /home/dev1/hadoop_play/hadoop_store/hdfs/namenode/edit2/current
 *********************************************
 !!!These are not used now, do not proceed!!!
 *********************************************

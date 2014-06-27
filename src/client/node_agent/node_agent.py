@@ -81,7 +81,7 @@ def handle_delivery(ch, method, header, body):
 
     if (enable_hack):
         print "Hacking the incoming message to be: "
-        body = "operation:change_log,seqid:0,filename:f.tar,offset:0,write_size:100,timestamp:66054"
+        body = "operation:change_log,seqid:0,filename:test1.bar,offset:0,write_size:100,timestamp:66054"
         print "New message is: " + body
     else:
         # enable_hack = True
@@ -255,6 +255,28 @@ def handle_change_log_msg(words):
     policy_table.show()
     policy_table_lock.release()
     # print "Released lock on the policy table.."
+
+    print "Hack flow .."
+
+    # hadoop fs -copyToLocal /nc_test/test1.bar ~/temp
+    print "Trying to copy filename from hadoop to local temp.."
+
+    # Say Hdfs dir is /data
+    hdfs_path = "/data/" + str(filename)
+    print "hdfs_dir = " + hdfs_path
+
+    child = subprocess.Popen(["hadoop", "fs", "-copyToLocal", hdfs_path, "/home/dev1/temp"])
+    print "In here"
+
+    time.sleep(5)
+
+    # scp test1.bar dev1@10.0.0.11:/home/dev1/store_temp
+    print "Trying to scp test1.bar from local temp to vm2"
+    
+    local_path = "/home/dev1/temp/" + filename
+    print local_path
+    child = subprocess.Popen(["scp", local_path, "dev1@10.0.0.11:/home/dev1/store_temp"])
+    print "In here"
 
 def print_thread_stats(name):
     

@@ -12,19 +12,3 @@ For FUSE,
 
 4. Install Binary data parser
 #sudo pip install construct
-
-For LoggedFS,
-
-1. Compile the code
-#make
-
-Notes to fix errors in the compilation
-1.1. Missing <pcre.h>
-#sudo apt-get install libpcre3-dev
-
-1.2. Missing <libxml/parser.h>
-#sudo apt-get install libxml2-dev
-
-1.3. Missing <rlog/rlog.h>
-#sudo apt-get install librlog-dev 
-

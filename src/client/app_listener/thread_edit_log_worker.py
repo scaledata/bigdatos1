@@ -4,12 +4,10 @@ import threading
 import time
 from construct import *
 
-        
 from collections import defaultdict
 from errno import ENOENT
 from stat import S_IFDIR, S_IFLNK, S_IFREG
 from sys import argv, exit
-
 
 import os
 
@@ -23,6 +21,13 @@ from threading import Lock
 import os
 
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
+
+# BigDatos common modules
+import datos_constants
+import debug_logger
+
+# Local modules
+import g 
 
 ##############################
 # Basic edit_log_worker thread
@@ -38,8 +43,9 @@ class edit_log_worker(threading.Thread):
         self.edit_log_dir = edit_log_dir
         
         
-    def run(self):
-        print "In run() method of edit_log_worker thread:", self.name
+    def run(self):        
+        # print "In run() method of edit_log_worker thread:", self.name
+        g.debug_log.log("In run() method of edit_log_worker thread:" + self.name)
 
         # Start FUSE
         save_fd = os.open(self.edit_log_dir, os.O_RDONLY)
@@ -62,10 +68,9 @@ class edit_log_worker(threading.Thread):
             time.sleep(1)
             
 
-        print "Edit log worker thread:", self.name, " is going to shutdown.. - bye"
+        # print "Edit log worker thread:", self.name, " is going to shutdown.. - bye"
+        g.debug_log.log("Edit log worker thread:" + self.name + " is going to shutdown.. - bye")
         
-
-
 
 class app_listener_fuse(LoggingMixIn, Operations):
     """Collect useful information before passing down operations."""
@@ -100,17 +105,15 @@ class app_listener_fuse(LoggingMixIn, Operations):
         return rPath;
 
            
-    def getattr(self, path, fh=None):
-        
+    def getattr(self, path, fh=None):        
         rpath = self.get_relative_path(path)
-        
-        
-        #print "At getattr for " + rpath
+        g.debug_log.log("At getattr for " + rpath)
         
         try: 
             st = os.lstat(rpath)
             
-            print "After getattr for " + rpath
+            # print "After getattr for " + rpath
+            g.debug_log.log("After getattr for " + rpath)
             
             ret = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
                 'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
@@ -125,34 +128,37 @@ class app_listener_fuse(LoggingMixIn, Operations):
             raise FuseOSError(ENOENT)
         
     def statfs(self, path):
-        
         rpath = self.get_relative_path(path)
-        
-        
-        #print "At statfs"
+               
+        # print "At statfs"
+        g.debug_log.log("At statfs")
+
         stv = os.statvfs(rpath)
         return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
             'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
             'f_frsize', 'f_namemax'))
 
-    def create(self, path, mode):
-        
+    def create(self, path, mode):       
         rpath = self.get_relative_path(path)
         
-        #print "At create"
-        
+        # print "At create"
+        g.debug_log.log("At create")
+
         ret = os.open(rpath, os.O_WRONLY | os.O_CREAT, mode)
         
+        # print "After create, ret: " + str(ret)
+        g.debug_log.log("After create, ret: " + str(ret))
         
         return ret
 
 
     def access(self, path, mode):
+        
         rpath = self.get_relative_path(path)
         
         ret = os.access(rpath, mode)
     
-        #print "At access " + rpath + ", mode: " + str(mode) + ", ret:" + str(ret)
+        g.debug_log.log("At access " + rpath + ", mode: " + str(mode) + ", ret:" + str(ret))
         
         if not ret:
             raise FuseOSError(EACCES)

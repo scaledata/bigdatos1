@@ -8,6 +8,8 @@
 import collections
 import logging 
 
+# import foo
+
 logging.basicConfig(level=logging.DEBUG,
                     format ='[%(levelname)s] (%(threadName)-10s) %(message)s',
                    )  
@@ -36,7 +38,7 @@ class policy_table:
 
     def show(self):       
 
-        logging.debug("Policy table currently has " + str(len(self.table)) + " entries")
+        logging.debug("NC: New - Policy table currently has " + str(len(self.table)) + " entries")
         print "---------------------------------------------------------------"
         count = 0
         for key in self.table:
@@ -47,12 +49,28 @@ class policy_table:
         print " "
         print " "
 
+    def add_job(self, seq_id, filename, offset, write_size, timestamp):
+
+        print "Policy_table: Adding job for filename:" + filename
+        if (not self.table.has_key(filename)):
+            print "Error: Policy table does not have policy for filename" + filename
+            exit(1)
+        
+        # print "dd - 1"
+        pentry = self.table[filename]
+        # print "found policy_entry.."
+        pentry.show()
+
+        pentry.add_job(int(offset), int(write_size), int(timestamp))
+
 # The policy entry is not thread safe
 class policy_entry:
     def __init__(self, filename, interval):
         # print "In policy_entry init"
         self.filename = filename
         self.interval = interval
+
+        # logging.debug("foo global = " + str(foo.test_val))
 
         # print "d - 1"
         self.pending_jobs = collections.deque()
@@ -62,6 +80,7 @@ class policy_entry:
 
         # print "done policy_entry init"
 
+        # foo.test_val = foo.test_val + 1
     def show(self):
         # print "Policy_entry show:"
         # print "Policy_entry start ...."
@@ -70,6 +89,25 @@ class policy_entry:
         print "filename:" + self.filename + " interval:" + str(self.interval)
         
         print "pending_jobs queue has ", len(self.pending_jobs), "jobs"
+        if (len(self.pending_jobs) != 0):
+            for job in self.pending_jobs:                
+                job.show()
         print "in_progress_jobs queue has ", len(self.in_progress_jobs), "jobs"    
+        if (len(self.in_progress_jobs) != 0):
+            for job in self.in_progress_jobs:
+                job.show()
         
-        # print "Policy_entry end"
+    def add_job(self, offset, write_size, timestamp):       
+        job = work_job(offset, write_size, timestamp)
+        self.pending_jobs.appendleft(job)
+
+# The job is not thread safe
+class work_job:
+    def __init__(self, offset, write_size, timestamp):        
+        self.offset = offset
+        self.write_size = write_size
+        self.timestamp = timestamp
+        
+    def show(self):
+        print "job -- offset:" + str(self.offset) + " write_size: " + str(self.write_size) + " timestamp: " + str(self.timestamp)
+

@@ -85,6 +85,7 @@ def handle_delivery(ch, method, header, body):
         print "New message is: " + body
     else:
         # enable_hack = True
+        print "Hack is not enabled.."
         
     # Put the msg body into the policy_table and signal the pe_listener to process it
     words = body.split(',')

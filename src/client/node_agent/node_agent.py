@@ -22,7 +22,7 @@ import time
 
 # BigDatos Constants
 import datos_constants
-import foo
+# import foo
 
 # BigDatos modules
 import policy_table
@@ -84,7 +84,7 @@ def handle_delivery(ch, method, header, body):
         body = "operation:change_log,seqid:0,filename:f.tar,offset:0,write_size:100,timestamp:66054"
         print "New message is: " + body
     else:
-        enable_hack = True
+        # enable_hack = True
         
     # Put the msg body into the policy_table and signal the pe_listener to process it
     words = body.split(',')

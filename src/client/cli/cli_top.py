@@ -23,7 +23,7 @@ import datos_constants
 # Other imports
 import argparse
 
-version = 0.2
+# version = 0.2
 
 # DAtos SHell
 cli_str = "dash>"
@@ -207,7 +207,7 @@ def send_rabbit_msg(str):
                credentials))
     channel = connection.channel()
     
-    channel.queue_declare(queue=queue_name)
+    # channel.queue_declare(queue=queue_name)
     
     channel.basic_publish(exchange='',
                           routing_key=queue_name,
@@ -287,7 +287,7 @@ def run_single():
 ########################
 # Main
 ########################
-print "Welcome to BigDatos CLI(", datos_constants.version,")"
+print "Welcome to BigDatos CLI(" + str(datos_constants.VERSION) + ")"
 
 if (len(sys.argv) > 1):
     run_single()

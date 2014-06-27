@@ -1,12 +1,17 @@
 For FUSE, 
 1. Download the latest stable version 2.9.3
-2. Install
+2. Untar the directory
+#tar -xzvf fuse-xxx.tar.gz
+3. Make and install
 #./configure
 #make
 #make install 
 
 3. Install Python binding
-#sudo apt-get install fusepy
+#sudo pip install fusepy
+
+4. Install Binary data parser
+#sudo pip install construct
 
 For LoggedFS,
 

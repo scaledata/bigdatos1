@@ -23,8 +23,12 @@ import time
 # BigDatos Constants
 import datos_constants
 
+# BigDatos modules
+import policy_table
+
 # Other imports
 import argparse
+import collections
 
 # Global section 
 version = 0.2
@@ -37,6 +41,8 @@ node_agent_ip = "10.0.0.3"
 # Globals shared between threads
 should_shutdown = False
 plist_thread = 0
+policy_table = policy_table.policy_table()
+policy_table_lock = threading.Lock()
 
 # TO DO:
 def on_connected(connection):
@@ -64,18 +70,72 @@ def on_queue_declared(frame):
     channel.basic_consume(handle_delivery, queue=datos_constants.NODE_AGENT_QUEUE_NAME)    
 
 def handle_delivery(ch, method, header, body):
+    # Global defs
+    global policy_table
+    global policy_table_lock
+
     print "handle_delivery received: ", body
     
     ch.basic_ack(method.delivery_tag)
-    print "acked message"
+    # print "acked message"
 
-    # Put the msg body in a queue and signal the pe_listener to process it
+    # Put the msg body into the policy_table and signal the pe_listener to process it
+    words = body.split(',')
+    filename = 0
+    interval = 0
+
+    # for word in words:
+    #    print word
+        
+    # print "check 1"
+    # word[0] Operation
+    sections = words[0].split(':')
+    # print "sections=", sections
+    # print "sections[0]: ", sections[0], " sections[1]:", sections[1]
+    
+    if (sections[0] != "operation"):
+        print "incorrect field - expect operation!"
+        exit(1)
+    if (sections[1] != "manage"):
+        print "incorrect field - expect manage!"
+        exit(1)
+
+    # print "check 2"    
+    # word[1] Filename
+    sections = words[1].split(':')
+    # print "sections[0]: ", sections[0], " sections[1]:", sections[1]
+    if (sections[0] != "filename"):
+        print "incorrect field - expect filename!"
+        exit(1)
+    filename = sections[1]
+    
+    # print "check 3"
+    # word[2] Interval
+    sections = words[2].split(':')
+    # print "sections[0]: ", sections[0], " sections[1]:", sections[1]
+    if (sections[0] != "interval"):
+        print "incorrect field - expect interval!"
+        exit(1)
+    interval = int(sections[1])
+
+    # print "check 4"
+    print "Asked to manage filename:", filename, " at interval: ", interval, "secs"
+    
+    # print "Trying to lock the policy table.."
+    policy_table_lock.acquire()
+    # print "Got policy table lock"
+    policy_table.add_manage_policy(filename, interval)
+    policy_table.show()
+    policy_table_lock.release()
+    # print "Released policy table lock"
+
+    # If the app-listener is not alive - launch it..
     
 def print_thread_stats(name):
     
     # TO DO: Change to log
     print "Thread: ", name, " is alive"
-
+       
 ##############################
 # Basic Policylistener thread
 ##############################

@@ -159,8 +159,9 @@ def handle_manage_policy_msg(words):
         # Launch Applistener
         print "Applistener is not alive -- going to launch it"
         # child = subprocess.Popen(["python", "./test_listener.py"], stdout=subprocess.PIPE)
+        # child = subprocess.Popen(["python", "./test_listener.py"])
 
-        child = subprocess.Popen(["python", "./test_listener.py"])
+        child = subprocess.Popen(["python", "../app_listener/thread_main.py", "10.0.0.3", "/tmp"])
         # child = subprocess.call("python ./hacked_listener.py")
 
         print "Return code was " + str(child)

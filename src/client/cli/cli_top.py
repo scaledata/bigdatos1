@@ -287,7 +287,7 @@ def run_single():
 ########################
 # Main
 ########################
-print "Welcome to BigDatos CLI(", version,")"
+print "Welcome to BigDatos CLI(", datos_constants.version,")"
 
 if (len(sys.argv) > 1):
     run_single()

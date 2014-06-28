@@ -8,7 +8,11 @@ For FUSE,
 #make install 
 
 3. Install Python binding
-#sudo pip install fusepy
+3.1 Clone the source git repository
+#git clone https://github.com/terencehonles/fusepy.git
+3.2 #./setup.sh install
+
+!!! Do not use sudo pip install fusepy as that gives you the old version
 
 4. Install Binary data parser
 #sudo pip install construct

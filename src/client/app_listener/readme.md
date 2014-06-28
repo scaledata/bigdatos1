@@ -10,16 +10,18 @@ Add the following line:
  </property>
 
 
-2. Changes to fuse.py
-#pwd
-/home/dev1/workspace/BigDatos/third-party/fuse/fuse/fusepy
-#sudo cp fuse.py /usr/local/lib/python2.7/dist-packages/fuse.py
 
-3. Install Binary data parser
+2. Install Binary data parser
 #sudo pip install construct
 
-4. Run App Listener alone
+3. Run App Listener alone
 #PYTHONPATH=../../include python thread_main.py 10.0.0.3 /home/dev1/hadoop_play/hadoop_store/hdfs/namenode/edit2/current
+
+4. Make scp happy
+Hard coded, on src side, you should have /home/dev1/temp directory
+On target side, you should have /home/dev1/store_temp directory
+
+
 *********************************************
 !!!These are not used now, do not proceed!!!
 *********************************************

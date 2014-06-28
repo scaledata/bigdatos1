@@ -8,7 +8,15 @@
 import collections
 import logging 
 
-# import foo
+import datetime
+import time
+
+# Local modules
+import common
+
+# Globals
+import g
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format ='[%(levelname)s] (%(threadName)-10s) %(message)s',
@@ -49,6 +57,22 @@ class policy_table:
         print " "
         print " "
 
+    def get_num_policies(self):
+        
+        print "In policy table get_num_policies()"
+        return len(self.table)
+
+    def get_policy(self, key):
+        
+        print "In policy table get_policy()"
+        pentry = self.table[key]
+        return pentry
+
+    def get_keys(self):
+        
+        print "In policy_table get_keys()"
+        return self.table.keys()
+
     def add_job(self, seq_id, filename, offset, write_size, timestamp):
 
         print "Policy_table: Adding job for filename:" + filename
@@ -63,12 +87,14 @@ class policy_table:
 
         pentry.add_job(int(offset), int(write_size), int(timestamp))
 
+        
+
 # The policy entry is not thread safe
 class policy_entry:
     def __init__(self, filename, interval):
         # print "In policy_entry init"
         self.filename = filename
-        self.interval = interval
+        self.interval = int(interval)
 
         # logging.debug("foo global = " + str(foo.test_val))
 
@@ -79,15 +105,18 @@ class policy_entry:
         self.in_progress_jobs = collections.deque()
 
         # print "done policy_entry init"
+        # Act as if we've just sent a job down for this policy
+        self.last_timestamp_sent = common.get_secs_since_epoch()
 
         # foo.test_val = foo.test_val + 1
     def show(self):
-        # print "Policy_entry show:"
-        # print "Policy_entry start ...."
+       
+        print "Policy_entry start --------------------"
 
         # NC: HACK here..
-        print "filename:" + self.filename + " interval:" + str(self.interval)
-        
+        print "filename:" + self.filename + " interval:" + str(self.interval) 
+        print "last timestamp sent: " + str(self.last_timestamp_sent)
+
         print "pending_jobs queue has ", len(self.pending_jobs), "jobs"
         if (len(self.pending_jobs) != 0):
             for job in self.pending_jobs:                
@@ -96,10 +125,14 @@ class policy_entry:
         if (len(self.in_progress_jobs) != 0):
             for job in self.in_progress_jobs:
                 job.show()
+
+        print "Policy_entry end ----------------------"        
         
     def add_job(self, offset, write_size, timestamp):       
         job = work_job(offset, write_size, timestamp)
-        self.pending_jobs.appendleft(job)
+        
+        # Add to the right of the queue
+        self.pending_jobs.append(job)
 
 # The job is not thread safe
 class work_job:

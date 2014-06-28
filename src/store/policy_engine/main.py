@@ -6,7 +6,11 @@ import pika
 import argparse
 import logging
 from local_pe_backend import local_pe_backend
+from swift_backend import swift_backend
 import datos_constants as DC
+import settings as g
+import subproess
+import os
 
 my_local_policy_store = local_pe_backend()
 my_local_mapping_store = local_pe_backend('FileRelations.txt')
@@ -18,6 +22,7 @@ heartbeat_channel = None
 global_policy_engine_queue = DC.POLICY_ENGINE_QUEUE_NAME
 global_node_agent_queue = DC.NODE_AGENT_QUEUE_NAME
 node_agent_channel = None
+
 
 def parse_input():
     parser = argparse.ArgumentParser(description='Start Policy Engine with an IP address')
@@ -180,8 +185,17 @@ def handle_delivery(ch, method, header, body):
                     return
                 
                 #TODO: start the transfer of the file back to HDFS
+                obj_name = storeComp[0]
+                
                 dest_dir = dest_name_pair[1]
                 print "Going to transfer data back to " + dest_dir
+                
+                g.swift_store.get('demo', obj_name, obj_name + ".tmp")
+                
+                child = subprocess.Popen(["scp", obj_name + ".tmp", "dev1@" + g.node_agent_ip \
+                                          + ":"+ dest_dir + "/" + obj_name])
+                
+                os.remove(obj_name + ".tmp")
                 
             else: 
     			# TODO: Raise error in error logging
@@ -204,21 +218,13 @@ def on_channel_open(new_channel):
     print "channel open"
     channel = new_channel
     
-    try: 
-        channel.queue_declare(queue=global_policy_engine_queue,
+    channel.queue_declare(queue=global_policy_engine_queue,
                               passive=False, 
                               durable=True, 
                               exclusive=False, 
                               auto_delete=False, 
                               callback=on_queue_declared)
-        
-    except:
-        channel.queue_declare(queue=global_policy_engine_queue,
-                              passive=True, 
-                              durable=True, 
-                              exclusive=False, 
-                              auto_delete=False, 
-                              callback=on_queue_declared)
+   
 
 def on_heartbeat_channel_open(new_channel):
     """Called when our channel has opened"""
@@ -226,20 +232,14 @@ def on_heartbeat_channel_open(new_channel):
     print "heartbeat channel open"
     heartbeat_channel = new_channel
    
-    try: 
-        heartbeat_channel.queue_declare(queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME,
+    
+    heartbeat_channel.queue_declare(queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME,
                               passive=False, 
                               durable=True, 
                               exclusive=False, 
                               auto_delete=False, 
                               callback=on_heartbeat_queue_declared)
-    except:
-        heartbeat_channel.queue_declare(queue=DC.POLICY_ENGINE_HEARTBEAT_QUEUE_NAME,
-                              passive=True, 
-                              durable=True, 
-                              exclusive=False, 
-                              auto_delete=False, 
-                              callback=on_heartbeat_queue_declared)
+    
         
 
 def handle_heartbeat(ch, method, header, body):
@@ -263,6 +263,13 @@ def on_heartbeat_queue_declared(frame):
 def main():
     
     args = parse_input()
+    
+    g.node_agent_ip = args.node_agent_ip
+    
+    g.swift_store = swift_backend('admin', 
+                            'indata2d', 
+                            'admin', 
+                            'http://controller:35357/v2.0')
 
     logging.getLogger('pika').setLevel(logging.CRITICAL)
     

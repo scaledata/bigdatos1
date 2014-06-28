@@ -27,6 +27,9 @@ import datos_constants
 # BigDatos modules
 import policy_table
 
+# Swift backend
+from swift_backend import swift_backend
+
 # Other imports
 import argparse
 import collections
@@ -275,7 +278,14 @@ def handle_change_log_msg(words):
     
     local_path = "/home/dev1/temp/" + filename
     print local_path
-    child = subprocess.Popen(["scp", local_path, "dev1@10.0.0.11:/home/dev1/store_temp"])
+    #child = subprocess.Popen(["scp", local_path, "dev1@10.0.0.11:/home/dev1/store_temp"])
+    swift_store = swift_backend('admin', 
+                            'indata2d', 
+                            'admin', 
+                            'http://controller:35357/v2.0')
+    
+    swift_store.put('demo', filename, local_path)
+    
     print "In here"
 
 def print_thread_stats(name):

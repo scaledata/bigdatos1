@@ -35,11 +35,12 @@ import collections
 import subprocess
 import math
 
-# Local includes
-import common
+# Utils function
+import datos_utils
 
 # Globals
 import g
+
 
 # Init globals ###################################
 # Constants (relatively) ############
@@ -75,7 +76,7 @@ def on_channel_open(new_channel):
     print "channel open"
     g.channel = new_channel
     g.channel.queue_declare(queue=datos_constants.NODE_AGENT_QUEUE_NAME,
-                          passive=True, # HACK NC: 
+                          passive=False, # HACK NC: 
                           durable=True, 
                           exclusive=False, 
                           auto_delete=False, 
@@ -96,7 +97,7 @@ def handle_delivery(ch, method, header, body):
     if (g.enable_hack):
         print "Hacking the incoming message to be: "
 
-        fake_timestamp = common.get_secs_since_epoch() # Say the write just came in..
+        fake_timestamp = datos_utils.get_secs_since_epoch() # Say the write just came in..
         body = "operation:change_log,seqid:0,filename:/test2.bar,offset:0,write_size:100,timestamp:" + str(fake_timestamp)
         print "New message is: " + body
 
@@ -288,12 +289,13 @@ def copy_from_hdfs_to_vm2(filename, send_job, new_timestamp_to_send):
     print "In here"
 
     # Wait for the file to land..
-    time.sleep(5)
+    #time.sleep(15)
+    child.communicate()
 
     # scp test1.bar dev1@10.0.0.11:/home/dev1/store_temp
     print "Trying to transfer test1.bar from local temp to swift"
     
-    local_path = "/home/dev1/temp/" + filename
+    local_path = "/home/dev1/temp" + filename
     print local_path
 
     #child = subprocess.Popen(["scp", local_path, "dev1@10.0.0.11:/home/dev1/store_temp"])
@@ -302,7 +304,7 @@ def copy_from_hdfs_to_vm2(filename, send_job, new_timestamp_to_send):
                             'admin', 
                             'http://controller:35357/v2.0')
     
-    swift_store.put('demo', filename, local_path)
+    swift_store.put('demo', filename[1:], local_path)
     
     print "In here"
     
@@ -384,7 +386,7 @@ class xport_process_thread(threading.Thread):
             num_policies = g.policy_table.get_num_policies()
             print "Policy table has " + str(num_policies) + " policies"
 
-            current_time = common.get_secs_since_epoch()
+            current_time = datos_utils.get_secs_since_epoch()
             elapsed_time = current_time - g.node_agent_start_time
 
             print "Elapsed time since start (of Node agent) is " + str(elapsed_time) + " secs"
@@ -401,7 +403,7 @@ class xport_process_thread(threading.Thread):
                 # some changes in the timeframe since we last sent down changes
                 # for this file.
 
-                time_since_last_sent_interval = common.get_secs_since_epoch() - pentry.last_timestamp_sent
+                time_since_last_sent_interval = datos_utils.get_secs_since_epoch() - pentry.last_timestamp_sent
                 print "time_since_last_sent_interval = " + str(time_since_last_sent_interval)
                 
                 if (time_since_last_sent_interval >= pentry.interval):
@@ -410,15 +412,16 @@ class xport_process_thread(threading.Thread):
                         new_timestamp_to_send = pentry.last_timestamp_sent + pentry.interval
                         print "Old era for this policy is over: need to send data with timestamp: " + str(new_timestamp_to_send) + " secs"
                     else:
-                        new_timestamp_to_send = common.get_secs_since_epoch()
+                        new_timestamp_to_send = datos_utils.get_secs_since_epoch()
                         print "Old era for this policy is over: need to send data with timestamp: " + str(new_timestamp_to_send) + " secs (first send of file)"
 
                     # Check to see if there are any jobs that have come in the last era                                                
                     print "At start, (pending jobs q size is): " + str(len(pentry.pending_jobs))        
                     while (len(pentry.pending_jobs) != 0):
                         job = pentry.pending_jobs[0]
-                        print "Looking at job:"
+                        print "Looking at job for current batch at time " + str(new_timestamp_to_send) + ""
                         job.show()
+                        time.sleep(5)
                         
                         if (job.timestamp <= new_timestamp_to_send):
                             print "Found job in the old era -- need to send it down.."
@@ -456,7 +459,7 @@ def startup():
 
     # Set the epoch start time and start time of the node agent
     g.epoch_time = datetime.datetime.utcfromtimestamp(0)   
-    g.node_agent_start_time = common.get_secs_since_epoch()
+    g.node_agent_start_time = datos_utils.get_secs_since_epoch()
 
     print "Node agent start time is set to: " + str(g.node_agent_start_time) + " secs (since epoch start)"
 

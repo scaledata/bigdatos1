@@ -24,6 +24,9 @@ import debug_logger
 # Local modules
 import g
 
+# Datos Utils
+import datos_utils
+
 # Globals
 should_shutdown = False
 hlist_thread = 0
@@ -120,7 +123,7 @@ def run():
             
                 g.debug_log.log("Name " + my_file_name + ", time " + str(my_ret["mtime"]) + ", name len " + str(my_ret["length"]) + "\n")
                 
-                cur_time = calendar.timegm(time.gmtime())
+                cur_time = datos_utils.get_secs_since_epoch() - 1800 # a hack to make node_agent happy
                 
                 msg_to_send = "operation:change_log,seqid:1,filename:" + my_file_name + ",offset:0,write_size:0,timestamp:" + str(cur_time)      
     
@@ -128,7 +131,7 @@ def run():
                                       routing_key=datos_constants.NODE_AGENT_QUEUE_NAME,
                                       body=msg_to_send)
                 
-                g.debug_log.log(" [x] Sent " + msg_to_send)
+                g.debug_log.log(" [x] Sent " + msg_to_send + " for timestamp " + str(cur_time))
                 
     
     except KeyboardInterrupt:

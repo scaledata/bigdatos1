@@ -50,7 +50,7 @@ def on_channel_open(new_channel):
                           auto_delete=False, 
                           callback=on_queue_declared)
 
-# TO DO:
+# Callback function called when this queue is declared
 def on_queue_declared(frame):
     # Called when RabbitMQ has told us our Queue has been declared, frame is the response from RabbitMQ
     global hb_channel

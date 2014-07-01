@@ -123,7 +123,7 @@ fuse-2.9.3.tar.gz,
 2.4.1 Clone the source git repository
 #git clone https://github.com/terencehonles/fusepy.git
 2.4.2 Install fusepy
-#sudo ./setup.sh install
+#sudo python ./setup.py install
 
 !!! Do not use sudo pip install fusepy as that gives you the old version
 

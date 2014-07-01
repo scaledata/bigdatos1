@@ -11,8 +11,10 @@ import logging
 import datetime
 import time
 
+# Common modules
+import datos_utils
+
 # Local modules
-import common
 
 # Globals
 import g
@@ -29,7 +31,7 @@ class policy_table:
         self.table = {}
 
     def add_manage_policy(self, filename, interval):
-        # print "add_manage_policy - 1 - interval=", interval
+        print "add_manage_policy - 1 - interval=", interval
         if self.table.has_key(filename):
             print "Policy already exists!"
             exit(1)
@@ -42,7 +44,7 @@ class policy_table:
             pentry = policy_entry(filename, interval)
             # print "Got a policy entry.."
             self.table[filename] = pentry
-            # print "Added policy entry to table"
+            print "Added policy entry to table"
 
     def show(self):       
 
@@ -92,21 +94,21 @@ class policy_table:
 # The policy entry is not thread safe
 class policy_entry:
     def __init__(self, filename, interval):
-        # print "In policy_entry init"
+        print "In policy_entry init"
         self.filename = filename
         self.interval = int(interval)
 
         # logging.debug("foo global = " + str(foo.test_val))
 
-        # print "d - 1"
+        print "d - 1"
         self.pending_jobs = collections.deque()
         
-        # print "d -2"
+        print "d -2"
         self.in_progress_jobs = collections.deque()
 
-        # print "done policy_entry init"
+        print "done policy_entry init"
         # Act as if we've just sent a job down for this policy
-        self.last_timestamp_sent = common.get_secs_since_epoch()
+        self.last_timestamp_sent = datos_utils.get_secs_since_epoch()
 
         # foo.test_val = foo.test_val + 1
     def show(self):

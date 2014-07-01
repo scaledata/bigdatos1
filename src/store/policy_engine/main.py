@@ -9,7 +9,7 @@ from local_pe_backend import local_pe_backend
 from swift_backend import swift_backend
 import datos_constants as DC
 import settings as g
-import subproess
+import subprocess
 import os
 
 my_local_policy_store = local_pe_backend()

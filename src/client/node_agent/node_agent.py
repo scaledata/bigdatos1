@@ -92,6 +92,7 @@ def handle_delivery(ch, method, header, body):
     print "handle_delivery received: ", body
     
     # NC: TO DO: Ack after the message has been added to the policy_table queues.
+    # Use rabbitmq's reliability
     ch.basic_ack(method.delivery_tag)
     # print "acked message"
 

@@ -97,6 +97,7 @@ def handle_delivery(ch, method, header, body):
 ##############################
 class hb_listener(threading.Thread):
     def __init__(self, threadid, name, counter):
+        print "In init/constructor of hb_listener.."
         threading.Thread.__init__(self)
         self.threadID = threadid
         self.name = name

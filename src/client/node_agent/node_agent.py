@@ -268,6 +268,8 @@ def handle_change_log_msg(words):
 
     g.policy_table.show()
     print "going to add job to pt.."
+
+    # NC: Should go to the on-disk structures..
     g.policy_table.add_job(seq_id, filename, offset, write_size, timestamp)
     g.policy_table.show()
     g.policy_table_lock.release()
